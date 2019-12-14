@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/processdef">
+  <process id="NewRequest" name="New Request" isExecutable="true">
+    <startEvent id="startevent2" name="Start" activiti:initiator="initiator">
+      <extensionElements>
+        <activiti:formProperty id="approver" name="Vendor ID" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="numberOfPeople" name="Number Of Contractor" type="long" required="true"></activiti:formProperty>
+        <activiti:formProperty id="startDate" name="Start Date" type="date" datePattern="MM/dd/yyyy" required="true"></activiti:formProperty>
+        <activiti:formProperty id="endDate" name="End Date" type="date" datePattern="MM/dd/yyyy"></activiti:formProperty>
+        <activiti:formProperty id="skillSet" name="Skill Set" type="enum" required="true">
+          <activiti:value id="java" name="Java"></activiti:value>
+          <activiti:value id="java-j2ee" name="JavaJ2ee"></activiti:value>
+          <activiti:value id=".net" name=".net"></activiti:value>
+          <activiti:value id="linux" name="linux"></activiti:value>
+          <activiti:value id="mysql" name="mysql"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="vendors" name="Select Vendor" type="enum" required="true">
+          <activiti:value id="techm" name="TechM"></activiti:value>
+          <activiti:value id="ibm" name="IBM"></activiti:value>
+          <activiti:value id="tcs" name="TCS"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <serviceTask id="ResourceRequestServiceTask" name="ResourceRequestServiceTask" activiti:class="com.ctl.activiti.helper.ResourceRequestHelper"></serviceTask>
+    <sequenceFlow id="flow6" sourceRef="startevent2" targetRef="ResourceRequestServiceTask"></sequenceFlow>
+    <userTask id="ManagerApproval" name="Manager Approval" activiti:assignee="${employeedata.managerCuid}">
+      <documentation>{
+    "FormData": {
+        "Request Created By": "${initiator} from CenturyLink",
+        "Number Of Contractors": "${resourceform.numberOfPeople}",
+        "Start Date": "${resourceform.startDate}",
+        "End Date": "${resourceform.endDate}",
+        "Vendor Name": "${resourceform.vendors}",
+        "Required Skill Set": "${resourceform.skillSet}",
+        "Additional Details": "${resourceform.additionalDetails}"
+    }
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="status" name="Status" type="enum" required="true">
+          <activiti:value id="approved" name="Approved"></activiti:value>
+          <activiti:value id="rejected" name="Rejected"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="exclusivegateway3" name="Exclusive Gateway"></exclusiveGateway>
+    <sequenceFlow id="flow8" sourceRef="ManagerApproval" targetRef="exclusivegateway3"></sequenceFlow>
+    <userTask id="ManagerRejected" name="Manager Rejected" activiti:assignee="${initiator}">
+      <documentation>{"FormData":{"Status":"${status} By Manager ${employeedata.managerName}","AdditionalDetails":"${additionalDetails}"}}</documentation>
+    </userTask>
+    <sequenceFlow id="flow10" sourceRef="exclusivegateway3" targetRef="ManagerRejected">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'rejected'}]]></conditionExpression>
+    </sequenceFlow>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <userTask id="ManagerApproved" name="Manager Approved" activiti:assignee="${initiator}">
+      <documentation>{"FormData":{"Status":"${status} By Manager ${employeedata.managerName}","AdditionalDetails":"${additionalDetails}"}}</documentation>
+    </userTask>
+    <subProcess id="subprocess1" name="Sub Process">
+      <multiInstanceLoopCharacteristics isSequential="false">
+        <loopCardinality>${resourceform.numberOfPeople}</loopCardinality>
+      </multiInstanceLoopCharacteristics>
+      <startEvent id="startevent3" name="Start"></startEvent>
+      <userTask id="ResourceRequestForm" name="Resource Request Form" activiti:assignee="${approver}">
+        <documentation>{
+    "FormData": {
+        "Request Created By": "${initiator} from CenturyLink",
+        "Number Of Contractors": "${resourceform.numberOfPeople}",
+        "Start Date": "${resourceform.startDate}",
+        "End Date": "${resourceform.endDate}",
+        "Vendor Name": "${resourceform.vendors}",
+        "Required Skill Set": "${resourceform.skillSet}",
+        "Additional Details": "${resourceform.additionalDetails}"
+    }
+}</documentation>
+        <extensionElements>
+          <activiti:formProperty id="ResourceName" name="Resource Name" type="string" required="true"></activiti:formProperty>
+          <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+        </extensionElements>
+      </userTask>
+      <userTask id="ResourceDetails" name="Resource Details" activiti:assignee="${initiator}">
+        <documentation>{"FormData":{"Resource Name":"${ResourceName}","Additional Details":"${additionalDetails}"}}</documentation>
+        <extensionElements>
+          <activiti:formProperty id="status" name="Status" type="enum" required="true">
+            <activiti:value id="approved" name="Approved"></activiti:value>
+            <activiti:value id="rejected" name="Rejected"></activiti:value>
+          </activiti:formProperty>
+          <activiti:formProperty id="additionalDetails" name="Additional Details" type="string" required="true"></activiti:formProperty>
+          <activiti:formProperty id="id" name="id" type="string" expression="${id}" default="${id}"></activiti:formProperty>
+        </extensionElements>
+      </userTask>
+      <sequenceFlow id="flow22" sourceRef="ResourceRequestForm" targetRef="ResourceDetails"></sequenceFlow>
+      <exclusiveGateway id="exclusivegateway5" name="Exclusive Gateway"></exclusiveGateway>
+      <sequenceFlow id="flow23" sourceRef="ResourceDetails" targetRef="exclusivegateway5"></sequenceFlow>
+      <userTask id="ResourceStatusRejected" name="Resource Status Rejected" activiti:assignee="${initiator}">
+        <documentation>{"FormData":{"Resource Name":"${ResourceName}","Resource Status":"${status}","Additional Details":"${additionalDetails}"}}</documentation>
+      </userTask>
+      <sequenceFlow id="flow24" sourceRef="exclusivegateway5" targetRef="ResourceStatusApproved">
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'approved'}]]></conditionExpression>
+      </sequenceFlow>
+      <sequenceFlow id="flow25" sourceRef="exclusivegateway5" targetRef="ResourceStatusRejected">
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'rejected'}]]></conditionExpression>
+      </sequenceFlow>
+      <userTask id="ResourceInformation" name="Resource Information" activiti:assignee="${initiator}">
+        <documentation>{"FormData":{"Additional Details":"${additionalDetails}"}}</documentation>
+        <extensionElements>
+          <activiti:formProperty id="id" name="id" type="string" expression="${id}" default="${id}"></activiti:formProperty>
+        </extensionElements>
+      </userTask>
+      <endEvent id="endevent2" name="End"></endEvent>
+      <sequenceFlow id="flow27" sourceRef="ResourceInformation" targetRef="endevent2"></sequenceFlow>
+      <sequenceFlow id="flow28" sourceRef="ResourceStatusRejected" targetRef="endevent2"></sequenceFlow>
+      <userTask id="ResourceStatusApproved" name="Resource Status Approved" activiti:assignee="${approver}">
+        <documentation>{"FormData":{"Resource Name":"${ResourceName}","Resource Status":"${status}","Additional Details":"${additionalDetails}"}}</documentation>
+        <extensionElements>
+          <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+          <activiti:formProperty id="id" name="id" type="string" expression="${id}" default="${id}"></activiti:formProperty>
+        </extensionElements>
+      </userTask>
+      <sequenceFlow id="flow26" sourceRef="ResourceStatusApproved" targetRef="ResourceInformation"></sequenceFlow>
+      <serviceTask id="mailtask2" name="Mail Task" activiti:type="mail">
+        <extensionElements>
+          <activiti:field name="to">
+            <activiti:string><![CDATA[dilleswara.gudla@centurylink.com]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="from">
+            <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="subject">
+            <activiti:string><![CDATA[tasknotification]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="cc">
+            <activiti:string><![CDATA[dilleswara.gudla@centurylink.com]]></activiti:string>
+          </activiti:field>
+          <activiti:field name="text">
+            <activiti:string><![CDATA[Task has been created in ON-BOARDING for resource]]></activiti:string>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+    </subProcess>
+    <sequenceFlow id="flow30" sourceRef="subprocess1" targetRef="endevent1"></sequenceFlow>
+    <serviceTask id="mailtask1" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:string><![CDATA[dilleswara.gudla@centurylink.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:string><![CDATA[Needed Approval For task]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="cc">
+          <activiti:string><![CDATA[dilleswara.gudla@centurylink.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="text">
+          <activiti:string><![CDATA[pls approve the task in  ON-BOARDING PROCESS]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <parallelGateway id="parallelgateway4" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow40" sourceRef="exclusivegateway3" targetRef="parallelgateway4">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'approved'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow41" sourceRef="parallelgateway4" targetRef="subprocess1"></sequenceFlow>
+    <sequenceFlow id="flow42" sourceRef="parallelgateway4" targetRef="ManagerApproved"></sequenceFlow>
+    <parallelGateway id="parallelgateway5" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow43" sourceRef="ResourceRequestServiceTask" targetRef="parallelgateway5"></sequenceFlow>
+    <sequenceFlow id="flow44" sourceRef="parallelgateway5" targetRef="ManagerApproval"></sequenceFlow>
+    <sequenceFlow id="flow45" sourceRef="parallelgateway5" targetRef="mailtask1"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_NewRequest">
+    <bpmndi:BPMNPlane bpmnElement="NewRequest" id="BPMNPlane_NewRequest">
+      <bpmndi:BPMNShape bpmnElement="startevent2" id="BPMNShape_startevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="-260.0" y="333.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceRequestServiceTask" id="BPMNShape_ResourceRequestServiceTask">
+        <omgdc:Bounds height="55.0" width="105.0" x="-130.0" y="324.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ManagerApproval" id="BPMNShape_ManagerApproval">
+        <omgdc:Bounds height="55.0" width="105.0" x="70.0" y="323.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway3" id="BPMNShape_exclusivegateway3">
+        <omgdc:Bounds height="58.0" width="41.0" x="320.0" y="331.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ManagerRejected" id="BPMNShape_ManagerRejected">
+        <omgdc:Bounds height="55.0" width="105.0" x="280.0" y="438.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="2220.0" y="475.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ManagerApproved" id="BPMNShape_ManagerApproved">
+        <omgdc:Bounds height="55.0" width="105.0" x="520.0" y="230.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="subprocess1" id="BPMNShape_subprocess1">
+        <omgdc:Bounds height="205.0" width="1301.0" x="520.0" y="390.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent3" id="BPMNShape_startevent3">
+        <omgdc:Bounds height="35.0" width="35.0" x="540.0" y="463.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceRequestForm" id="BPMNShape_ResourceRequestForm">
+        <omgdc:Bounds height="55.0" width="105.0" x="660.0" y="493.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceDetails" id="BPMNShape_ResourceDetails">
+        <omgdc:Bounds height="55.0" width="105.0" x="850.0" y="493.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway5" id="BPMNShape_exclusivegateway5">
+        <omgdc:Bounds height="40.0" width="40.0" x="1090.0" y="493.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceStatusRejected" id="BPMNShape_ResourceStatusRejected">
+        <omgdc:Bounds height="55.0" width="105.0" x="1550.0" y="511.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceInformation" id="BPMNShape_ResourceInformation">
+        <omgdc:Bounds height="55.0" width="105.0" x="1560.0" y="423.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent2" id="BPMNShape_endevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="1710.0" y="477.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceStatusApproved" id="BPMNShape_ResourceStatusApproved">
+        <omgdc:Bounds height="55.0" width="105.0" x="1390.0" y="423.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask2" id="BPMNShape_mailtask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="660.0" y="390.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask1" id="BPMNShape_mailtask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="30.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway4" id="BPMNShape_parallelgateway4">
+        <omgdc:Bounds height="40.0" width="40.0" x="440.0" y="330.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway5" id="BPMNShape_parallelgateway5">
+        <omgdc:Bounds height="40.0" width="40.0" x="0.0" y="331.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="-225.0" y="350.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-130.0" y="351.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+        <omgdi:waypoint x="175.0" y="350.0"></omgdi:waypoint>
+        <omgdi:waypoint x="320.0" y="360.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
+        <omgdi:waypoint x="340.0" y="389.0"></omgdi:waypoint>
+        <omgdi:waypoint x="332.0" y="438.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow22" id="BPMNEdge_flow22">
+        <omgdi:waypoint x="765.0" y="520.0"></omgdi:waypoint>
+        <omgdi:waypoint x="850.0" y="520.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow23" id="BPMNEdge_flow23">
+        <omgdi:waypoint x="955.0" y="520.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1090.0" y="513.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
+        <omgdi:waypoint x="1110.0" y="493.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1279.0" y="450.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1390.0" y="450.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow25" id="BPMNEdge_flow25">
+        <omgdi:waypoint x="1130.0" y="513.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1280.0" y="538.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1550.0" y="538.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow27" id="BPMNEdge_flow27">
+        <omgdi:waypoint x="1665.0" y="450.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1727.0" y="477.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow28" id="BPMNEdge_flow28">
+        <omgdi:waypoint x="1655.0" y="538.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1727.0" y="512.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow26" id="BPMNEdge_flow26">
+        <omgdi:waypoint x="1495.0" y="450.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1560.0" y="450.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow30" id="BPMNEdge_flow30">
+        <omgdi:waypoint x="1821.0" y="492.0"></omgdi:waypoint>
+        <omgdi:waypoint x="2220.0" y="492.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow40" id="BPMNEdge_flow40">
+        <omgdi:waypoint x="361.0" y="360.0"></omgdi:waypoint>
+        <omgdi:waypoint x="440.0" y="350.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow41" id="BPMNEdge_flow41">
+        <omgdi:waypoint x="460.0" y="370.0"></omgdi:waypoint>
+        <omgdi:waypoint x="459.0" y="492.0"></omgdi:waypoint>
+        <omgdi:waypoint x="520.0" y="492.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow42" id="BPMNEdge_flow42">
+        <omgdi:waypoint x="460.0" y="330.0"></omgdi:waypoint>
+        <omgdi:waypoint x="460.0" y="267.0"></omgdi:waypoint>
+        <omgdi:waypoint x="520.0" y="257.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow43" id="BPMNEdge_flow43">
+        <omgdi:waypoint x="-25.0" y="351.0"></omgdi:waypoint>
+        <omgdi:waypoint x="0.0" y="351.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow44" id="BPMNEdge_flow44">
+        <omgdi:waypoint x="40.0" y="351.0"></omgdi:waypoint>
+        <omgdi:waypoint x="70.0" y="350.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow45" id="BPMNEdge_flow45">
+        <omgdi:waypoint x="20.0" y="331.0"></omgdi:waypoint>
+        <omgdi:waypoint x="20.0" y="247.0"></omgdi:waypoint>
+        <omgdi:waypoint x="30.0" y="247.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

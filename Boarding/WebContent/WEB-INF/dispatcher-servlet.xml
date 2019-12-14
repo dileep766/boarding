@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+	http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/mvc 
+	http://www.springframework.org/schema/mvc/spring-mvc.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+
+	<context:component-scan base-package="com.ctl.activiti" />
+	<mvc:annotation-driven />
+	
+ <mvc:interceptors>
+  <bean class="com.ctl.activiti.helper.AuthenticationInterceptor">
+</bean></mvc:interceptors> 
+
+	  <!-- <bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/WEB-INF/views/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+	 -->
+	<bean id="JDBCTemplate" class="com.ctl.activiti.helper.JDBCTemplateHelper">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+	<mvc:default-servlet-handler/>
+		
+	<bean id="viewResolver"
+	    class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.tiles2.TilesView"/>
+	</bean>
+
+	<bean class="org.springframework.web.servlet.view.tiles2.TilesConfigurer" id="tilesConfigurer">
+	<property name="definitions">
+	    <list>
+		<value>/WEB-INF/tiles.xml</value>
+	    </list>
+	</property>
+	</bean>
+ <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://10.140.1.90:3306/activiti"/>
+        <property name="username" value="test"/>                 
+        <property name="password" value="password"/>
+    </bean>
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+<bean id="processEngineconfigwithoutldap" class="org.activiti.spring.SpringProcessEngineConfiguration">
+		<property name="databaseType" value="mysql" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="databaseSchemaUpdate" value="true" />
+		<property name="deploymentResources">
+		<list>
+		<!-- <value>classpath*:activitiflows/HelpDesk.bpmn</value>-->
+	 <value>classpath*:activitiflows/MyProcess.bpmn</value> 
+		</list>
+		</property>
+		<property name="history" value="audit" />
+		<property name="jobExecutorActivate" value="true" />
+		<property name="mailServerHost" value="mailgate.qintra.com" />
+		</bean>
+	<bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration" >
+		<property name="databaseType" value="mysql" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="databaseSchemaUpdate" value="true" />
+		<property name="deploymentResources">
+		<list>
+		<!-- <value>classpath*:activitiflows/HelpDesk.bpmn</value> -->
+	<value>classpath*:activitiflows/MyProcess.bpmn</value> 
+		</list>
+		</property>
+		<property name="history" value="audit" />
+		<property name="jobExecutorActivate" value="true" />
+		<property name="configurators">          
+    	<list>              
+    	<bean class="org.activiti.ldap.LDAPConfigurator">  
+                
+    		<property name="server" value="ldaps://ldap.qintra.com" />
+    		<property name="port" value="1636" />                
+    		<property name="user" value="uid=vrouteop,ou=People,dc=mnet,dc=qintra,dc=com" />
+    		<property name="password" value="Coolgear14" />    
+    	<!-- 	<property name="userIdAttribute" value="uid" />   -->   
+    		<property name="userEmailAttribute" value="mail" />  
+    		<property name="userIdAttribute" value="uid" />
+                <property name="userFirstNameAttribute" value="givenName" />
+                <property name="userLastNameAttribute" value="sn" />
+ 
+                <property name="groupIdAttribute" value="cn" />
+                <property name="groupNameAttribute" value="cn" />                   
+    		      <property name="Number" value="mobile" />   
+    		      <property name="employeeid" value="employeeNumber" />       
+    		<property name="baseDn" value="ou=People,dc=mnet,dc=qintra,dc=com" />     
+			<property name="reportees" value="manager=mnair,uid=aa88319,ou=People,dc=mnet,dc=qintra,dc=com" />  
+    		           
+    		<property name="queryUserByUserId" value="(&amp;(objectClass=inetOrgPerson)(uid={0}))" />                
+    		<property name="queryUserByFullNameLike" value="(&amp;(objectClass=inetOrgPerson)(|({0}=*{1}*)({2}=*{3}*)))" />                
+    		<property name="queryGroupsForUser" value="(&amp;(objectClass=groupOfUniqueNames)(uniqueMember={0}))" />                                
+    	               
+    		                           
+                           
+    	</bean>          	
+    		
+    	</list>        
+    	</property> 
+    	<property name="mailServerHost" value="mailgate.qintra.com" />
+		</bean>
+		<bean id ="ldapconfigurator" class="org.activiti.ldap.LDAPConfigurator">
+		      
+		       <property name="server" value="ldaps://ldap.qintra.com" />
+    		<property name="port" value="1636" />                
+    		<property name="user" value="uid=vrouteop,ou=People,dc=mnet,dc=qintra,dc=com" />
+    		<property name="password" value="Coolgear14" />                                
+    		<!-- Query params -->                
+    		<property name="baseDn" value="ou=People,dc=mnet,dc=qintra,dc=com" />     
+    	<!--  <property name="reportees" value="manager=mnair,uid=aa88319,ou=People,dc=mnet,dc=qintra,dc=com" />   -->
+    		<!--  <property name="reportees" value="manager=uid=pbhakt,ou=People,dc=mnet,dc=qintra,dc=com" />             -->
+    		<property name="queryUserByUserId" value="(&amp;(objectClass=inetOrgPerson)(uid={0}))" />                
+    		<property name="queryUserByFullNameLike" value="(&amp;(objectClass=inetOrgPerson)(|({0}=*{1}*)({2}=*{3}*)))" />                
+    		<property name="queryGroupsForUser" value="(&amp;(objectClass=groupOfUniqueNames)(uniqueMember={0}))" />                                
+    		<!-- Attribute config -->                
+    		<property name="userIdAttribute" value="uid" />                
+    		<property name="userFirstNameAttribute" value="givenname" />                
+    		<property name="userLastNameAttribute" value="sn" />                                
+    		<property name="groupIdAttribute" value="title" />                
+    		<property name="groupNameAttribute" value="title" />   
+    		 <property name="userEmailAttribute" value="mail" /> 
+               <property name="Number" value="mobile" />
+                <property name="employeeid" value="employeeNumber" />  
+		      </bean>
+		 
+		  <bean id="LdapUserManager" class="org.activiti.ldap.LDAPUserManager">
+		      <constructor-arg ref="ldapconfigurator" />
+		      </bean>
+		      <bean id="LdapGroupManger" class="org.activiti.ldap.LDAPGroupManager">
+		      <constructor-arg ref="ldapconfigurator" />
+		      </bean>
+		
+		
+<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    <property name="maxUploadSize" value="268435456"/> <!-- 256 megs -->
+</bean>
+	<bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
+		<property name="processEngineConfiguration" ref="processEngineConfiguration" />
+	</bean>
+	<bean id="processEnginewithoutldap" class="org.activiti.spring.ProcessEngineFactoryBean">
+		<property name="processEngineConfiguration" ref="processEngineconfigwithoutldap" />
+	</bean>
+	
+<bean id="identityServicewithoutldap" factory-bean="processEnginewithoutldap"
+		factory-method="getIdentityService" autowire="byName" />
+<bean id="taskServicewithoutldap" factory-bean="processEngine"
+		factory-method="getTaskService" autowire="byName" />		
+		
+	<bean id="repositoryService" factory-bean="processEngine"
+		factory-method="getRepositoryService" autowire="byName" />
+	<bean id="runtimeService" factory-bean="processEngine"
+		factory-method="getRuntimeService" autowire="byName"  />
+	<bean id="taskService" factory-bean="processEngine"
+		factory-method="getTaskService" autowire="byName" />
+	<bean id="historyService" factory-bean="processEngine"
+		factory-method="getHistoryService" autowire="byName" />
+	<bean id="identityService" factory-bean="processEngineConfiguration"
+		factory-method="getIdentityService" autowire="byName"  />
+	<bean id="managementService" factory-bean="processEngine"
+		factory-method="getManagementService" autowire="byName" />
+		<bean id="formService" factory-bean="processEngine" factory-method="getFormService" autowire="byName" />
+		<bean id="defaultLoginHandler" class="com.ctl.activiti.login.DefaultLoginHandler" >
+		<property name="identityService" ref="identityService" />
+		</bean>
+		<bean id="order" class="com.ctl.activiti.helper.OrderService" />
+	</beans>

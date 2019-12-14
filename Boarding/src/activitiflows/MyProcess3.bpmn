@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/processdef">
+  <process id="NewRequest" name="Request" isExecutable="true">
+    <startEvent id="startevent1" name="Start" activiti:initiator="initiator">
+      <extensionElements>
+        <activiti:formProperty id="approver" name="Vendor ID" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="numberOfPeople" name="Number Of Contractor" type="long" required="true"></activiti:formProperty>
+        <activiti:formProperty id="startDate" name="Start Date" type="date" datePattern="MM/dd/yyyy" required="true"></activiti:formProperty>
+        <activiti:formProperty id="endDate" name="End Date" type="date" datePattern="MM/dd/yyyy"></activiti:formProperty>
+        <activiti:formProperty id="skillSet" name="Skill Set" type="enum" required="true">
+          <activiti:value id="java" name="Java"></activiti:value>
+          <activiti:value id="java-j2ee" name="JavaJ2ee"></activiti:value>
+          <activiti:value id=".net" name=".net"></activiti:value>
+          <activiti:value id="linux" name="linux"></activiti:value>
+          <activiti:value id="mysql" name="mysql"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="vendors" name="Select Vendor" type="enum" required="true">
+          <activiti:value id="techm" name="TechM"></activiti:value>
+          <activiti:value id="ibm" name="IBM"></activiti:value>
+          <activiti:value id="tcs" name="TCS"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="resourcetype" name="Resource Type" type="enum" required="true">
+          <activiti:value id="billable" name="Billable"></activiti:value>
+          <activiti:value id="nonbillable" name="Non Billable"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <sequenceFlow id="flow58" sourceRef="startevent1" targetRef="ResourceRequestServiceTask"></sequenceFlow>
+    <serviceTask id="ResourceRequestServiceTask" name="ResourceRequestServiceTask" activiti:class="com.ctl.activiti.helper.ResourceRequestHelper"></serviceTask>
+    <userTask id="ResourceRequestForm" name="Resource Request Form" activiti:assignee="${approver}">
+      <documentation>{
+    "FormData": {
+        "Request Created By": "${initiator} from CenturyLink",
+        "Number Of Contractors": "${resourceform.numberOfPeople}",
+        "Start Date": "${resourceform.startDate}",
+        "End Date": "${resourceform.endDate}",
+        "Resource Type": "${resourceform.resourcetype}",
+        "Required Skill Set": "${resourceform.skillSet}",
+        "Additional Details": "${resourceform.additionalDetails}"
+    }
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="ResourceName" name="Resource Name" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <userTask id="ResourceDetails" name="Resource Details" activiti:assignee="${initiator}">
+      <documentation>{
+    "FormData": {
+        "Resource Name": "${ResourceName}",
+        "Resource Type": "${resourceform.resourcetype}",
+        "Vendor Name": "${resourceform.vendors}",
+        "Required Skill Set": "${resourceform.skillSet}",
+        "Additional Details": "${additionalDetails}"
+    },
+    "id": "${id}"
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="status" name="Status" type="enum" required="true">
+          <activiti:value id="approved" name="Approved"></activiti:value>
+          <activiti:value id="rejected" name="Rejected"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="id" name="id" type="string" expression="${id}" default="${id}"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="exclusivegateway5" name="Exclusive Gateway"></exclusiveGateway>
+    <userTask id="ResourceStatusApproved" name="Resource Status Approved" activiti:assignee="${approver}">
+      <documentation>{
+    "FormData": {
+        "Resource Name": "${ResourceName}",
+        "Resource Type": "${resourceform.resourcetype}",
+        "Vendor Name": "${resourceform.vendors}",
+        "Skill Set": "${resourceform.skillSet}",
+        "Resource Status": "${status}",
+        "Additional Details": "${additionalDetails}"
+    },
+    "id": "${id}"
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+        <activiti:formProperty id="id" name="id" type="string" expression="${id}" default="${id}"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow48" sourceRef="ResourceStatusApproved" targetRef="parallelgateway2"></sequenceFlow>
+    <userTask id="ResourceStatusRejected" name="Resource Status Rejected" activiti:assignee="${approver}">
+      <documentation>{"FormData":{"Resource Name":"${ResourceName}","Resource Status":"${status}","Additional Details":"${additionalDetails}"},"id":"${id}"}</documentation>
+    </userTask>
+    <sequenceFlow id="flow28" sourceRef="ResourceStatusRejected" targetRef="endevent2"></sequenceFlow>
+    <userTask id="ResourceInformation" name="Resource Information" activiti:async="true" activiti:exclusive="false" activiti:assignee="${initiator}">
+      <documentation>{"FormData":{"Resource Name":"${ResourceName}","Vendor Name":"${resourceform.vendors}","Skill Set":"${resourceform.skillSet}","Additional Details":"${additionalDetails}"},"id":"${id}"}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="id" name="id" type="string" expression="${id}" default="${id}"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <parallelGateway id="parallelgateway2" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow51" sourceRef="parallelgateway2" targetRef="ResourceInfotoHRops"></sequenceFlow>
+    <userTask id="ResourceInfotoHRops" name="Resource Information to HR Ops" activiti:async="true" activiti:exclusive="false" activiti:assignee="aa88319">
+      <documentation>{"FormData":{"Resource Name":"${ResourceName}","Vendor Name":"${resourceform.vendors}","Skill Set":"${resourceform.skillSet}","Additional Details":"${additionalDetails}"},"id":"${id}"}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="status" name="Status" type="enum" required="true">
+          <activiti:value id="approved" name="Approved"></activiti:value>
+          <activiti:value id="rejected" name="Rejected"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="id" name="id" type="string" expression="${id}" default="${id}"></activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string" required="true"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <intermediateCatchEvent id="timerintermediatecatchevent1" name="TimerCatchEvent">
+      <timerEventDefinition>
+        <timeDuration>PT${hours}S</timeDuration>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <sequenceFlow id="flow41" sourceRef="timerintermediatecatchevent1" targetRef="usertask1"></sequenceFlow>
+    <userTask id="usertask1" name="Contract Closing Notification" activiti:assignee="${initiator}">
+      <documentation>{
+   "FormData":{
+      "Resource Name":"${ResourceName}",
+      "Vendor Name":"${resourceform.vendors}",
+      "Skill Set":"${resourceform.skillSet}",
+      "Additional Details":"Contact period will be going to  complete in 15 days"
+   },
+   "id":"${id}"
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="contractstatus" name="Extending Contract" type="enum" required="true">
+          <activiti:value id="no" name="No"></activiti:value>
+          <activiti:value id="yes" name="Yes"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="endDate" name="Extending Up To" type="date" datePattern="MM/dd/yyyy"></activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string" required="true"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow34" sourceRef="usertask1" targetRef="exclusivegateway6"></sequenceFlow>
+    <exclusiveGateway id="exclusivegateway6" name="Exclusive Gateway"></exclusiveGateway>
+    <sequenceFlow id="flow36" sourceRef="exclusivegateway6" targetRef="usertask2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contractstatus == 'no'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow37" sourceRef="exclusivegateway6" targetRef="usertask3">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contractstatus == 'yes'}]]></conditionExpression>
+    </sequenceFlow>
+    <userTask id="usertask3" name="Contract Extending Notification" activiti:assignee="${approver}">
+      <documentation>{
+   "FormData":{
+      "Resource Name":"${ResourceName}",
+      "Extending contract":"${contractstatus}",
+      "Extending Up To":"${endDate}",
+      "Additional Details":"${additionalDetails}"
+   },
+   "id":"${id}"
+}</documentation>
+    </userTask>
+    <sequenceFlow id="flow43" sourceRef="usertask3" targetRef="endevent2"></sequenceFlow>
+    <userTask id="usertask2" name="Contract Closing Notinfication" activiti:assignee="${approver}">
+      <documentation>{
+   "FormData":{
+      "Resource Name":"${ResourceName}",
+      "Extending contract":"${contractstatus}",
+      "Additional Details":"${additionalDetails}"
+   },
+   "id":"${id}"
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow44" sourceRef="usertask2" targetRef="usertask4"></sequenceFlow>
+    <userTask id="usertask4" name="Send Exit Clearance Form" activiti:async="true" activiti:exclusive="false" activiti:assignee="${initiator}">
+      <documentation>{
+   "FormData":{
+      "Resource Name":"${ResourceName}",
+      "Extending Contract":"${contractstatus}",
+      "Feed back from Vendor for Closing Contract":"${additionalDetails}"
+   },
+   "id":"${id}"
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow45" sourceRef="usertask4" targetRef="parallelgateway1"></sequenceFlow>
+    <parallelGateway id="parallelgateway1" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow46" sourceRef="parallelgateway1" targetRef="usertask5"></sequenceFlow>
+    <sequenceFlow id="flow47" sourceRef="parallelgateway1" targetRef="usertask6"></sequenceFlow>
+    <userTask id="usertask5" name="LWD for HR Ops Team" activiti:async="true" activiti:exclusive="false" activiti:assignee="aa88319">
+      <documentation>{
+    "FormData": {
+        "Resource Name": "${ResourceName}",
+        "Vendor Name": "${resourceform.vendors}",
+        "Skill Set": "${resourceform.skillSet}",
+        "Contract End Date": "${resourceform.endDate}"
+    }
+}</documentation>
+    </userTask>
+    <sequenceFlow id="flow54" sourceRef="usertask5" targetRef="endevent2"></sequenceFlow>
+    <userTask id="usertask6" name="Exit Clearance Form" activiti:async="true" activiti:exclusive="false" activiti:assignee="${approver}">
+      <documentation>{
+    "FormData": {
+        "Resource Name": "${ResourceName}",
+        "Vendor Name": "${resourceform.vendors}",
+        "Skill Set": "${resourceform.skillSet}",
+        "Contract End Date": "${resourceform.endDate}",
+        "Additional Details": "${additionalDetails}"
+    },
+    "id": "${id}"
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <endEvent id="endevent2" name="End"></endEvent>
+    <userTask id="usertask7" name="Filled Exit Clearence Form" activiti:assignee="${initiator}">
+      <documentation>{
+    "FormData": {
+        "Resource Name": "${ResourceName}",
+        "Vendor Name": "${resourceform.vendors}",
+        "Skill Set": "${resourceform.skillSet}",
+        "Contract End Date": "${resourceform.endDate}",
+        "Additional Details": "${additionalDetails}"
+    },
+    "id": "${id}"
+}</documentation>
+    </userTask>
+    <sequenceFlow id="flow59" sourceRef="usertask6" targetRef="usertask7"></sequenceFlow>
+    <sequenceFlow id="flow60" sourceRef="usertask7" targetRef="endevent2"></sequenceFlow>
+    <serviceTask id="mailtask1" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression>${vendoruserinfo.mail}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Resource Request Raised By  ${employeedata.name}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;HI ${vendoruserinfo.user}&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;center&gt;&lt;b&gt;Please  Upload resume for on-boarding process in following url&lt;b&gt;&lt;br&gt;&lt;a href="http://10.140.0.93:8788/OnBoarding"&gt;http://10.140.0.93:8788/OnBoarding&lt;/a&gt;&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow70" sourceRef="ResourceRequestServiceTask" targetRef="mailtask1"></sequenceFlow>
+    <sequenceFlow id="flow71" sourceRef="mailtask1" targetRef="ResourceRequestForm"></sequenceFlow>
+    <serviceTask id="mailtask2" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression>${employeedata.cuid}@centurylink.com</activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Resource Information Sent By  ${vendoruserinfo.user}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;HI ${employeedata.name}&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;center&gt;&lt;b&gt;Please Find Uploaded Resume for on-boarding process in following url&lt;b&gt;&lt;br&gt;&lt;a href="http://10.140.0.93:8788/OnBoarding"&gt;http://10.140.0.93:8788/OnBoarding&lt;/a&gt;&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <parallelGateway id="parallelgateway3" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow73" sourceRef="parallelgateway3" targetRef="mailtask2"></sequenceFlow>
+    <sequenceFlow id="flow76" sourceRef="ResourceRequestForm" targetRef="parallelgateway3"></sequenceFlow>
+    <sequenceFlow id="flow77" sourceRef="parallelgateway3" targetRef="ResourceDetails"></sequenceFlow>
+    <sequenceFlow id="flow78" sourceRef="ResourceDetails" targetRef="exclusivegateway5"></sequenceFlow>
+    <serviceTask id="mailtask3" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression>${vendoruserinfo.mail}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Resource Resume Rejected By  ${employeedata.name}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;HI ${vendoruserinfo.user}&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;center&gt;&lt;b&gt;Check the Reason For Rejecting Resource in on-boarding process in following url&lt;b&gt;&lt;br&gt;&lt;a href="http://10.140.0.93:8788/OnBoarding"&gt;http://10.140.0.93:8788/OnBoarding&lt;/a&gt;&lt;&gt;&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <parallelGateway id="parallelgateway4" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow79" sourceRef="exclusivegateway5" targetRef="parallelgateway4">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'rejected'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow80" sourceRef="parallelgateway4" targetRef="mailtask3"></sequenceFlow>
+    <sequenceFlow id="flow81" sourceRef="parallelgateway4" targetRef="ResourceStatusRejected"></sequenceFlow>
+    <parallelGateway id="parallelgateway5" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow82" sourceRef="exclusivegateway5" targetRef="parallelgateway5">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'approved'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow83" sourceRef="parallelgateway5" targetRef="ResourceStatusApproved"></sequenceFlow>
+    <serviceTask id="mailtask4" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression>${vendoruserinfo.mail}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Resource Resume Approved By  ${employeedata.name}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;HI ${vendoruserinfo.user}&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;center&gt;&lt;b&gt;Pls download all attached Documents&lt;br/&gt;Fill and upload them back in on-boarding process in following url&lt;b&gt;&lt;br&gt;&lt;a href="http://10.140.0.93:8788/OnBoarding"&gt;http://10.140.0.93:8788/OnBoarding&lt;/a&gt;&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow84" sourceRef="parallelgateway5" targetRef="mailtask4"></sequenceFlow>
+    <serviceTask id="mailtask5" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:string><![CDATA[aa88319@centurylink.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Resource Info Sent By  ${vendoruserinfo.user}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:string><![CDATA[<p>HI <p><br/><br/><center><b>Pls Verify all attached Documents.<br/>If the documents are not proper format pls Reject them  in on-boarding process in following url<b><br><a href="http://10.140.0.93:8788/OnBoarding">http://10.140.0.93:8788/OnBoarding</a></center>]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow85" sourceRef="parallelgateway2" targetRef="mailtask5"></sequenceFlow>
+    <exclusiveGateway id="exclusivegateway7" name="Exclusive Gateway"></exclusiveGateway>
+    <sequenceFlow id="flow86" sourceRef="ResourceInfotoHRops" targetRef="exclusivegateway7"></sequenceFlow>
+    <sequenceFlow id="flow87" sourceRef="exclusivegateway7" targetRef="parallelgateway7">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'approved'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow88" sourceRef="exclusivegateway7" targetRef="parallelgateway6">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${status == 'rejected'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow90" sourceRef="ResourceInformation" targetRef="timerintermediatecatchevent1"></sequenceFlow>
+    <serviceTask id="mailtask6" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression>${vendoruserinfo.mail}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Refill the documents for Resource Resume Approved By  ${employeedata.name}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;HI ${vendoruserinfo.user}&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;center&gt;&lt;b&gt;the documents what you are uploaded are not properly filled.&lt;br/&gt; Pls download all attached Documents&lt;br/&gt;Fill and upload them back in on-boarding process in following url&lt;b&gt;&lt;br&gt;&lt;a href="http://10.140.0.93:8788/OnBoarding"&gt;http://10.140.0.93:8788/OnBoarding&lt;/a&gt;&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <parallelGateway id="parallelgateway6" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow91" sourceRef="parallelgateway6" targetRef="mailtask6"></sequenceFlow>
+    <sequenceFlow id="flow92" sourceRef="parallelgateway6" targetRef="ResourceStatusApproved"></sequenceFlow>
+    <serviceTask id="mailtask7" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression>${employeedata.cuid}@centurylink.com</activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Resource Info Sent By  ${vendoruserinfo.user} and verified by HROps Team</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;HI ${employeedata.name}&lt;p&gt;&lt;br/&gt;&lt;br/&gt;&lt;center&gt;&lt;b&gt;Pls Verify all attached Documents.&lt;br/&gt;If the documents are not proper format pls Reject them  in on-boarding process in following url&lt;b&gt;&lt;br&gt;&lt;a href="http://10.140.0.93:8788/OnBoarding"&gt;http://10.140.0.93:8788/OnBoarding&lt;/a&gt;&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <parallelGateway id="parallelgateway7" name="Parallel Gateway"></parallelGateway>
+    <sequenceFlow id="flow93" sourceRef="parallelgateway7" targetRef="ResourceInformation"></sequenceFlow>
+    <sequenceFlow id="flow94" sourceRef="parallelgateway7" targetRef="mailtask7"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_NewRequest">
+    <bpmndi:BPMNPlane bpmnElement="NewRequest" id="BPMNPlane_NewRequest">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="-1030.0" y="55.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceRequestServiceTask" id="BPMNShape_ResourceRequestServiceTask">
+        <omgdc:Bounds height="55.0" width="105.0" x="-960.0" y="45.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceRequestForm" id="BPMNShape_ResourceRequestForm">
+        <omgdc:Bounds height="55.0" width="105.0" x="-660.0" y="47.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceDetails" id="BPMNShape_ResourceDetails">
+        <omgdc:Bounds height="55.0" width="105.0" x="-440.0" y="45.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway5" id="BPMNShape_exclusivegateway5">
+        <omgdc:Bounds height="40.0" width="40.0" x="-270.0" y="52.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceStatusApproved" id="BPMNShape_ResourceStatusApproved">
+        <omgdc:Bounds height="55.0" width="105.0" x="-210.0" y="-47.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceStatusRejected" id="BPMNShape_ResourceStatusRejected">
+        <omgdc:Bounds height="55.0" width="105.0" x="-200.0" y="136.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceInformation" id="BPMNShape_ResourceInformation">
+        <omgdc:Bounds height="55.0" width="161.0" x="260.0" y="54.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway2" id="BPMNShape_parallelgateway2">
+        <omgdc:Bounds height="40.0" width="40.0" x="20.0" y="-40.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="ResourceInfotoHRops" id="BPMNShape_ResourceInfotoHRops">
+        <omgdc:Bounds height="55.0" width="161.0" x="-40.0" y="24.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="timerintermediatecatchevent1" id="BPMNShape_timerintermediatecatchevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="580.0" y="10.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="640.0" y="0.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway6" id="BPMNShape_exclusivegateway6">
+        <omgdc:Bounds height="40.0" width="40.0" x="790.0" y="7.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask3" id="BPMNShape_usertask3">
+        <omgdc:Bounds height="55.0" width="105.0" x="890.0" y="0.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask2" id="BPMNShape_usertask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="901.0" y="146.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask4" id="BPMNShape_usertask4">
+        <omgdc:Bounds height="55.0" width="105.0" x="1090.0" y="153.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway1" id="BPMNShape_parallelgateway1">
+        <omgdc:Bounds height="40.0" width="40.0" x="1230.0" y="177.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask5" id="BPMNShape_usertask5">
+        <omgdc:Bounds height="55.0" width="105.0" x="1300.0" y="123.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask6" id="BPMNShape_usertask6">
+        <omgdc:Bounds height="55.0" width="105.0" x="1270.0" y="246.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent2" id="BPMNShape_endevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="1610.0" y="156.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask7" id="BPMNShape_usertask7">
+        <omgdc:Bounds height="55.0" width="105.0" x="1404.0" y="218.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask1" id="BPMNShape_mailtask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="-810.0" y="47.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask2" id="BPMNShape_mailtask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="-560.0" y="146.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway3" id="BPMNShape_parallelgateway3">
+        <omgdc:Bounds height="40.0" width="40.0" x="-528.0" y="55.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask3" id="BPMNShape_mailtask3">
+        <omgdc:Bounds height="55.0" width="105.0" x="-390.0" y="136.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway4" id="BPMNShape_parallelgateway4">
+        <omgdc:Bounds height="40.0" width="40.0" x="-270.0" y="101.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway5" id="BPMNShape_parallelgateway5">
+        <omgdc:Bounds height="40.0" width="40.0" x="-270.0" y="1.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask4" id="BPMNShape_mailtask4">
+        <omgdc:Bounds height="55.0" width="105.0" x="-400.0" y="-54.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask5" id="BPMNShape_mailtask5">
+        <omgdc:Bounds height="55.0" width="105.0" x="-12.0" y="-108.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway7" id="BPMNShape_exclusivegateway7">
+        <omgdc:Bounds height="40.0" width="40.0" x="160.0" y="33.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask6" id="BPMNShape_mailtask6">
+        <omgdc:Bounds height="55.0" width="105.0" x="230.0" y="-101.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway6" id="BPMNShape_parallelgateway6">
+        <omgdc:Bounds height="40.0" width="40.0" x="160.0" y="-30.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask7" id="BPMNShape_mailtask7">
+        <omgdc:Bounds height="55.0" width="105.0" x="170.0" y="159.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway7" id="BPMNShape_parallelgateway7">
+        <omgdc:Bounds height="40.0" width="40.0" x="170.0" y="101.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow58" id="BPMNEdge_flow58">
+        <omgdi:waypoint x="-995.0" y="72.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-960.0" y="72.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow48" id="BPMNEdge_flow48">
+        <omgdi:waypoint x="-105.0" y="-20.0"></omgdi:waypoint>
+        <omgdi:waypoint x="20.0" y="-20.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow28" id="BPMNEdge_flow28">
+        <omgdi:waypoint x="-148.0" y="191.0"></omgdi:waypoint>
+        <omgdi:waypoint x="252.0" y="340.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1443.0" y="340.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1627.0" y="191.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow51" id="BPMNEdge_flow51">
+        <omgdi:waypoint x="40.0" y="0.0"></omgdi:waypoint>
+        <omgdi:waypoint x="40.0" y="24.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow41" id="BPMNEdge_flow41">
+        <omgdi:waypoint x="615.0" y="27.0"></omgdi:waypoint>
+        <omgdi:waypoint x="640.0" y="27.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow34" id="BPMNEdge_flow34">
+        <omgdi:waypoint x="745.0" y="27.0"></omgdi:waypoint>
+        <omgdi:waypoint x="790.0" y="27.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow36" id="BPMNEdge_flow36">
+        <omgdi:waypoint x="810.0" y="47.0"></omgdi:waypoint>
+        <omgdi:waypoint x="810.0" y="173.0"></omgdi:waypoint>
+        <omgdi:waypoint x="901.0" y="173.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow37" id="BPMNEdge_flow37">
+        <omgdi:waypoint x="830.0" y="27.0"></omgdi:waypoint>
+        <omgdi:waypoint x="890.0" y="27.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow43" id="BPMNEdge_flow43">
+        <omgdi:waypoint x="995.0" y="27.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1468.0" y="27.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1627.0" y="156.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow44" id="BPMNEdge_flow44">
+        <omgdi:waypoint x="1006.0" y="173.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1090.0" y="180.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow45" id="BPMNEdge_flow45">
+        <omgdi:waypoint x="1195.0" y="180.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1230.0" y="197.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow46" id="BPMNEdge_flow46">
+        <omgdi:waypoint x="1250.0" y="177.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1249.0" y="151.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1300.0" y="150.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow47" id="BPMNEdge_flow47">
+        <omgdi:waypoint x="1250.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1249.0" y="267.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1270.0" y="273.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow54" id="BPMNEdge_flow54">
+        <omgdi:waypoint x="1405.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1610.0" y="173.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow59" id="BPMNEdge_flow59">
+        <omgdi:waypoint x="1375.0" y="273.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1404.0" y="245.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow60" id="BPMNEdge_flow60">
+        <omgdi:waypoint x="1456.0" y="218.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1627.0" y="191.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow70" id="BPMNEdge_flow70">
+        <omgdi:waypoint x="-855.0" y="72.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-810.0" y="74.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow71" id="BPMNEdge_flow71">
+        <omgdi:waypoint x="-705.0" y="74.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-660.0" y="74.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow73" id="BPMNEdge_flow73">
+        <omgdi:waypoint x="-508.0" y="95.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-508.0" y="146.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow76" id="BPMNEdge_flow76">
+        <omgdi:waypoint x="-555.0" y="74.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-528.0" y="75.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow77" id="BPMNEdge_flow77">
+        <omgdi:waypoint x="-488.0" y="75.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-440.0" y="72.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow78" id="BPMNEdge_flow78">
+        <omgdi:waypoint x="-335.0" y="72.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-270.0" y="72.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow79" id="BPMNEdge_flow79">
+        <omgdi:waypoint x="-230.0" y="72.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-250.0" y="101.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow80" id="BPMNEdge_flow80">
+        <omgdi:waypoint x="-270.0" y="121.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-347.0" y="121.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-338.0" y="136.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow81" id="BPMNEdge_flow81">
+        <omgdi:waypoint x="-230.0" y="121.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-149.0" y="121.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-148.0" y="136.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow82" id="BPMNEdge_flow82">
+        <omgdi:waypoint x="-230.0" y="72.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-250.0" y="41.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow83" id="BPMNEdge_flow83">
+        <omgdi:waypoint x="-230.0" y="21.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-158.0" y="8.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow84" id="BPMNEdge_flow84">
+        <omgdi:waypoint x="-270.0" y="21.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-327.0" y="21.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-348.0" y="1.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow85" id="BPMNEdge_flow85">
+        <omgdi:waypoint x="40.0" y="-40.0"></omgdi:waypoint>
+        <omgdi:waypoint x="40.0" y="-53.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow86" id="BPMNEdge_flow86">
+        <omgdi:waypoint x="121.0" y="51.0"></omgdi:waypoint>
+        <omgdi:waypoint x="160.0" y="53.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow87" id="BPMNEdge_flow87">
+        <omgdi:waypoint x="180.0" y="73.0"></omgdi:waypoint>
+        <omgdi:waypoint x="190.0" y="90.0"></omgdi:waypoint>
+        <omgdi:waypoint x="190.0" y="101.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow88" id="BPMNEdge_flow88">
+        <omgdi:waypoint x="200.0" y="53.0"></omgdi:waypoint>
+        <omgdi:waypoint x="175.0" y="37.0"></omgdi:waypoint>
+        <omgdi:waypoint x="175.0" y="16.0"></omgdi:waypoint>
+        <omgdi:waypoint x="180.0" y="10.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow90" id="BPMNEdge_flow90">
+        <omgdi:waypoint x="421.0" y="81.0"></omgdi:waypoint>
+        <omgdi:waypoint x="597.0" y="45.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow91" id="BPMNEdge_flow91">
+        <omgdi:waypoint x="180.0" y="-30.0"></omgdi:waypoint>
+        <omgdi:waypoint x="180.0" y="-74.0"></omgdi:waypoint>
+        <omgdi:waypoint x="230.0" y="-74.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow92" id="BPMNEdge_flow92">
+        <omgdi:waypoint x="160.0" y="-10.0"></omgdi:waypoint>
+        <omgdi:waypoint x="145.0" y="-11.0"></omgdi:waypoint>
+        <omgdi:waypoint x="116.0" y="-120.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-152.0" y="-120.0"></omgdi:waypoint>
+        <omgdi:waypoint x="-158.0" y="-47.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow93" id="BPMNEdge_flow93">
+        <omgdi:waypoint x="190.0" y="101.0"></omgdi:waypoint>
+        <omgdi:waypoint x="190.0" y="81.0"></omgdi:waypoint>
+        <omgdi:waypoint x="260.0" y="81.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow94" id="BPMNEdge_flow94">
+        <omgdi:waypoint x="190.0" y="141.0"></omgdi:waypoint>
+        <omgdi:waypoint x="222.0" y="159.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

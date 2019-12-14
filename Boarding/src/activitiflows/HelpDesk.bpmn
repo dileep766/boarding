@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="HelpDesk" name="HelpDesk" isExecutable="true">
+    <startEvent id="startevent1" name="Start" activiti:initiator="initiator">
+      <extensionElements>
+        <activiti:formProperty id="employeeid" name="Employee ID" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="employeename" name="Employee Name" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="phonenumber" name="Employee Phone Number" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="bridgenumber" name="Bridge Number" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="passcode" name="Pass Code" type="string"></activiti:formProperty>
+        <activiti:formProperty id="calltime" name="Call Time" type="date" required="true"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <serviceTask id="mailtask1" name="Mail to HelpDesk" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:string><![CDATA[aa88319@centurylink.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Call Request Raised by ${employeeid}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;Hi 
+&lt;/p&gt;&lt;br/&gt;
+&lt;center&gt;&lt;p sytle="color:blue;align:center"&gt;Please Connect the call using following Details.&lt;/center&gt;
+&lt;br/&gt;
+
+&lt;center&gt;
+&lt;style type="text/css"&gt;
+.tftable {font-size:12px;color:#333333;width:100%;border-width: 1px;border-color: #9dcc7a;border-collapse: collapse;}
+.tftable th {font-size:12px;background-color:#abd28e;border-width: 1px;padding: 8px;border-style: solid;border-color: #9dcc7a;text-align:left;}
+.tftable tr {background-color:#ffffff;}
+.tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #9dcc7a;}
+&lt;/style&gt;
+&lt;br/&gt;
+&lt;br/&gt;
+&lt;table class="tftable" border="1"&gt;
+&lt;tr&gt;&lt;th colspan="2"&gt;Call Information&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Employee ID&lt;/td&gt;&lt;td&gt;${employeeid} &lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Employee Name&lt;/td&gt;&lt;td&gt;${employeename} from CenturyLink &lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Employee Phone Number &lt;/td&gt;&lt;td&gt;${phonenumber}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Bridge Number &lt;/td&gt;&lt;td&gt;${bridgenumber} &lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Pass Code &lt;/td&gt;&lt;td&gt;${passcode} &lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Call Time &lt;/td&gt;&lt;td&gt;${calltime} &lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt; 
+&lt;br/&gt;&lt;br/&gt;
+&lt;/center&gt;&lt;center&gt;
+&lt;b&gt;Please Update the call connection Status in the following URL&lt;b&gt;&lt;br&gt;&lt;a href="http://10.140.0.93:8899/Conference"&gt;http://10.140.0.93:8899/Conference&lt;/a&gt;&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+        <activiti:field name="cc">
+          <activiti:expression>${userinfo.getEmail()}</activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="mailtask1"></sequenceFlow>
+    <userTask id="usertask1" name="Call Connection Status" activiti:assignee="aa88319">
+      <documentation>{
+    "FormData": {
+        "Employee ID": "${employeeid}",
+        "Employee Name": "${employeename}",
+        "Employee Phone Number": "${phonenumber}",
+        "Bridge Number": "${bridgenumber}",
+        "Pass Code": "${passcode}",
+	  "Call Time":"${calltime}"
+    }
+}</documentation>
+      <extensionElements>
+        <activiti:formProperty id="connected" name="Connected" type="enum">
+          <activiti:value id="yes" name="Yes"></activiti:value>
+          <activiti:value id="no" name="No"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="additionalDetails" name="Additional Details" type="string"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow3" sourceRef="mailtask1" targetRef="usertask1"></sequenceFlow>
+    <serviceTask id="mailtask2" name="Mail Task" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression>${userinfo.getEmail()}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[trnshelp@qwest.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:expression>Call Connection Status ${employeeid}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression>&lt;p&gt;Hi  ${userinfo.getFirstName()}
+&lt;/p&gt;&lt;br/&gt;
+&lt;center&gt;&lt;p sytle="color:blue;align:center"&gt;Please find call connection status details.&lt;/center&gt;
+&lt;br/&gt;
+
+&lt;center&gt;
+&lt;style type="text/css"&gt;
+.tftable {font-size:12px;color:#333333;width:100%;border-width: 1px;border-color: #9dcc7a;border-collapse: collapse;}
+.tftable th {font-size:12px;background-color:#abd28e;border-width: 1px;padding: 8px;border-style: solid;border-color: #9dcc7a;text-align:left;}
+.tftable tr {background-color:#ffffff;}
+.tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #9dcc7a;}
+&lt;/style&gt;
+&lt;br/&gt;
+&lt;br/&gt;
+&lt;table class="tftable" border="1"&gt;
+&lt;tr&gt;&lt;th colspan="2"&gt;Call Information&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Call Connected&lt;/td&gt;&lt;td&gt;${connected} &lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Additional Details&lt;/td&gt;&lt;td&gt;${additionalDetails} &lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt; 
+&lt;br/&gt;&lt;br/&gt;
+&lt;/center&gt;</activiti:expression>
+        </activiti:field>
+        <activiti:field name="cc">
+          <activiti:string><![CDATA[aa88319@centurylink.com]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow5" sourceRef="usertask1" targetRef="mailtask2"></sequenceFlow>
+    <sequenceFlow id="flow6" sourceRef="mailtask2" targetRef="endevent1"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_HelpDesk">
+    <bpmndi:BPMNPlane bpmnElement="HelpDesk" id="BPMNPlane_HelpDesk">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="62.0" y="120.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="610.0" y="120.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask1" id="BPMNShape_mailtask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="160.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="330.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask2" id="BPMNShape_mailtask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="480.0" y="110.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="97.0" y="137.0"></omgdi:waypoint>
+        <omgdi:waypoint x="160.0" y="137.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="265.0" y="137.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="137.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="435.0" y="137.0"></omgdi:waypoint>
+        <omgdi:waypoint x="480.0" y="137.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="585.0" y="137.0"></omgdi:waypoint>
+        <omgdi:waypoint x="610.0" y="137.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
